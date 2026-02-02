@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAPPY BIRTHDAY VALEN! 🎉</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        
+        body::-webkit-scrollbar { width: 10px; }
+        body::-webkit-scrollbar-track { background: #030712; }
+        body::-webkit-scrollbar-thumb { background: #374151; border-radius: 5px; }
+
+        /* Full-screen invisible layer to catch the first click */
+        #click-layer {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            cursor: pointer;
+            background: rgba(0,0,0,0); /* Completely transparent */
+        }
+    </style>
+</head>
+<body class="bg-gray-950 min-h-screen w-full relative text-white">
+
+    <div id="click-layer"></div>
+
+    <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+        <img id="bg-1" src="images/1.png" class="absolute inset-0 w-full h-full object-cover filter blur-3xl opacity-40 scale-110 brightness-75" onerror="this.style.display='none'">
+        <img id="bg-2" src="images/2.jpg" class="absolute inset-0 w-full h-full object-cover filter blur-3xl opacity-40 scale-110 brightness-75" onerror="this.style.display='none'">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-[2px]"></div>
+    </div>
+
+    <main class="relative z-10 w-full flex justify-center py-0 md:py-12">
+        <div class="relative w-full md:max-w-2xl group">
+            <img id="img-1" src="images/1.png" class="animate-fade-in w-full h-auto object-contain shadow-2xl rounded-none md:rounded-2xl" onerror="this.style.display='none'">
+            <img id="img-2" src="images/2.jpg" class="animate-fade-in w-full h-auto object-contain shadow-2xl rounded-none md:rounded-2xl" onerror="this.style.display='none'">
+        </div>
+    </main>
+
+    <div id="player" style="position: absolute; top: -1000px;"></div>
+
+    <script>
+        // Settings
+        const VIDEO_ID = '1NOPHb4Xegk'; 
+        const START_TIME = 24;
+
+        // Load YouTube API
+        var tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        var player;
+
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('player', {
+                height: '0',
+                width: '0',
+                videoId: VIDEO_ID,
+                playerVars: {
+                    'autoplay': 1,
+                    'loop': 1,
+                    'playlist': VIDEO_ID,
+                    'start': START_TIME,
+                    'controls': 0,
+                    'origin': window.location.origin // CRITICAL FOR LIVE SERVER
+                },
+                events: {
+                    'onReady': (event) => {
+                        // We start muted to ensure the browser allows the video to 'load'
+                        event.target.mute();
+                        event.target.playVideo();
+                    },
+                    'onStateChange': (event) => {
+                        // If it finishes, loop it back to the start time
+                        if (event.data === YT.PlayerState.ENDED) {
+                            player.seekTo(START_TIME);
+                            player.playVideo();
+                        }
+                    }
+                }
+            });
+        }
+
+        // FORCE PLAY LOGIC
+        const clickLayer = document.getElementById('click-layer');
+        
+        clickLayer.addEventListener('click', () => {
+            if (player && typeof player.playVideo === 'function') {
+                player.unMute();
+                player.setVolume(100);
+                player.playVideo();
+                
+                // Hide the layer so the user can interact with the rest of the site
+                clickLayer.style.display = 'none';
+                console.log("Audio unlocked and playing!");
+            }
+        });
+    </script>
+</body>
+</html>

@@ -50,7 +50,7 @@
         </button>
         
         <p id="loading-status" class="mt-4 text-xs text-white/40 uppercase tracking-widest">
-            Loading photos... (0%)
+            Loading... (0%)
         </p>
     </div>
 
@@ -84,7 +84,7 @@
             img.onload = () => {
                 imagesLoaded++;
                 const progress = Math.round((imagesLoaded / imageUrls.length) * 100);
-                statusText.innerText = `Loading photos... (${progress}%)`;
+                statusText.innerText = `Loading ... (${progress}%)`;
                 
                 if (imagesLoaded === imageUrls.length) {
                     checkAllReady();

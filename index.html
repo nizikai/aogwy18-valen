@@ -90,7 +90,7 @@
         const canvas = document.getElementById('confetti-canvas');
         const ctx = canvas.getContext('2d');
         let pieces = [];
-        let numberOfPieces = 40; // Reduced for mobile performance
+        let numberOfPieces = 40;
         let lastTime = Date.now();
 
         function initCanvas() {
@@ -152,8 +152,8 @@
                 }, 800);
             }
         });
-
+ 
         window.addEventListener('resize', initCanvas);
-    </script>
+    </script> 
 </body>
 </html>

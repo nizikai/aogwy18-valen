@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>HAPPY BIRTHDAY VALEN! 🎉</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -10,6 +10,8 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         
+        body { background-color: #030712; margin: 0; overflow-x: hidden; }
+
         #birthday-overlay {
             position: fixed; inset: 0; z-index: 9999;
             background: radial-gradient(circle, #111827 0%, #030712 100%);
@@ -17,46 +19,50 @@
             transition: opacity 0.8s ease;
         }
 
-        .gift-box { font-size: 5rem; cursor: pointer; transition: transform 0.3s ease; }
-        
-        body::-webkit-scrollbar { width: 8px; }
-        body::-webkit-scrollbar-track { background: #030712; }
-        body::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 10px; }
-
-        /* Mobile Smoothness Fix */
         #confetti-canvas {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: 50;
+            position: fixed; top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            pointer-events: none; z-index: 50;
         }
+
+        /* Styles for the loading/disabled state */
+        #open-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(1);
+        }
+        
+        .gift-box { font-size: 5rem; }
     </style>
 </head>
-<body class="bg-gray-950 min-h-screen w-full relative text-white overflow-x-hidden" id="main-body">
+<body class="text-white relative" id="main-body">
 
     <canvas id="confetti-canvas"></canvas>
 
     <div id="birthday-overlay">
-        <div class="gift-box mb-4">🎁</div>
+        <div class="gift-box mb-4 animate-bounce">🎁</div>
         <h1 class="text-3xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-pink-400 to-purple-500 text-center px-4">
             Happy Birthday, Valen!
         </h1>
-        <button id="open-btn" class="px-8 py-4 bg-white text-black font-bold rounded-full shadow-lg active:scale-90 transition-all">
-            Open Your Gift
+        
+        <button id="open-btn" disabled class="px-8 py-4 bg-white text-black font-bold rounded-full shadow-lg active:scale-95 transition-all">
+            Waiting for Surprise...
         </button>
-        <p id="loading-text" class="mt-4 text-xs text-white/40 uppercase tracking-widest">Loading surprise...</p>
+        
+        <p id="loading-status" class="mt-4 text-xs text-white/40 uppercase tracking-widest">
+            Loading photos... (0%)
+        </p>
     </div>
 
     <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-        <img id="bg-1" src="images/1.png" class="absolute inset-0 w-full h-full object-cover filter blur-3xl opacity-30 scale-110" onerror="this.style.display='none'">
+        <img id="bg-1" src="images/1.png" class="absolute inset-0 w-full h-full object-cover blur-3xl opacity-30 brightness-75">
         <div class="absolute inset-0 bg-black/40 backdrop-blur-[2px]"></div>
     </div>
 
-    <main id="content" class="relative z-10 w-full flex justify-center py-6 md:py-12 opacity-0">
-        <div class="relative w-full md:max-w-2xl px-4 md:px-0">
-            <img id="img-1" src="images/1.png" class="animate-fade-in w-full h-auto shadow-2xl rounded-2xl border border-white/10 mb-8" onerror="this.style.display='none'">
-            <img id="img-2" src="images/2.jpg" class="animate-fade-in w-full h-auto shadow-2xl rounded-2xl border border-white/10" onerror="this.style.display='none'">
+    <main id="content" class="relative z-10 w-full flex flex-col items-center py-6 px-4 md:py-12 opacity-0">
+        <div class="w-full max-w-2xl space-y-8">
+            <img id="img-1" src="images/1.png" class="w-full h-auto shadow-2xl rounded-2xl border border-white/10">
+            <img id="img-2" src="images/2.jpg" class="w-full h-auto shadow-2xl rounded-2xl border border-white/10">
         </div>
     </main>
 
@@ -65,8 +71,42 @@
     <script>
         const VIDEO_ID = '1NOPHb4Xegk'; 
         const START_TIME = 24;
+        const imageUrls = ['images/1.png', 'images/2.jpg'];
+        
+        let imagesLoaded = 0;
+        const openBtn = document.getElementById('open-btn');
+        const statusText = document.getElementById('loading-status');
 
-        // --- YOUTUBE API ---
+        // --- 1. IMAGE PRELOADER ---
+        imageUrls.forEach(src => {
+            const img = new Image();
+            img.src = src;
+            img.onload = () => {
+                imagesLoaded++;
+                const progress = Math.round((imagesLoaded / imageUrls.length) * 100);
+                statusText.innerText = `Loading photos... (${progress}%)`;
+                
+                if (imagesLoaded === imageUrls.length) {
+                    checkAllReady();
+                }
+            };
+            img.onerror = () => {
+                // If an image fails, we still want to let them in
+                imagesLoaded++;
+                if (imagesLoaded === imageUrls.length) checkAllReady();
+            };
+        });
+
+        function checkAllReady() {
+            if (playerReady && imagesLoaded === imageUrls.length) {
+                openBtn.disabled = false;
+                openBtn.innerText = "Open Your Gift";
+                statusText.innerText = "Everything is ready! ✨";
+                statusText.classList.add('text-pink-400');
+            }
+        }
+
+        // --- 2. YOUTUBE API ---
         var tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
         var firstScriptTag = document.getElementsByTagName('script')[0];
@@ -80,80 +120,84 @@
                 height: '0', width: '0', videoId: VIDEO_ID,
                 playerVars: { 'autoplay': 1, 'loop': 1, 'playlist': VIDEO_ID, 'start': START_TIME, 'controls': 0, 'origin': window.location.origin },
                 events: {
-                    'onReady': (e) => { playerReady = true; document.getElementById('loading-text').innerText = "Ready ✨"; e.target.mute(); e.target.playVideo(); },
+                    'onReady': (e) => { 
+                        playerReady = true; 
+                        e.target.mute(); 
+                        e.target.playVideo();
+                        checkAllReady(); 
+                    },
                     'onStateChange': (e) => { if (e.data === YT.PlayerState.ENDED) { player.seekTo(START_TIME); player.playVideo(); } }
                 }
             });
         }
 
-        // --- MOBILE OPTIMIZED SLOW RAIN ---
+        // --- 3. CONFETTI RAIN (Stable Version) ---
         const canvas = document.getElementById('confetti-canvas');
         const ctx = canvas.getContext('2d');
         let pieces = [];
-        let numberOfPieces = 40;
-        let lastTime = Date.now();
+        let isRaining = false;
 
-        function initCanvas() {
+        function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
         }
 
         class Piece {
-            constructor() {
+            constructor() { this.reset(); this.y = Math.random() * canvas.height; }
+            reset() {
                 this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height - canvas.height;
+                this.y = -20;
+                this.size = Math.random() * 5 + 3;
+                this.speed = Math.random() * 1.5 + 0.5;
+                this.color = `hsl(${Math.random() * 360}, 80%, 70%)`;
                 this.rotation = Math.random() * 360;
-                this.color = `hsl(${Math.random() * 360}, 70%, 70%)`;
-                this.size = Math.random() * 6 + 4;
-                this.speed = Math.random() * 2 + 1;
             }
             update() {
                 this.y += this.speed;
-                this.rotation += 1;
-                if (this.y > canvas.height) {
-                    this.y = -20;
-                    this.x = Math.random() * canvas.width;
-                }
+                this.rotation += 0.5;
+                if (this.y > canvas.height) this.reset();
             }
             draw() {
-                ctx.save();
-                ctx.translate(this.x, this.y);
-                ctx.rotate(this.rotation * Math.PI / 180);
-                ctx.fillStyle = this.color;
-                ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+                ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.rotation * Math.PI / 180);
+                ctx.fillStyle = this.color; ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
                 ctx.restore();
             }
         }
 
         function animate() {
+            if (!isRaining) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             pieces.forEach(p => { p.update(); p.draw(); });
             requestAnimationFrame(animate);
         }
 
-        // --- INTERACTION ---
-        document.getElementById('open-btn').addEventListener('click', () => {
-            if (player && playerReady) {
-                player.unMute(); player.setVolume(100); player.playVideo();
+        // --- 4. THE REVEAL ---
+        openBtn.addEventListener('click', () => {
+            player.unMute(); player.setVolume(100); player.playVideo();
 
-                // 1. BIG BURST (Instant High Quality)
-                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+            // Big Burst
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
 
-                // 2. START SLOW RAIN
-                initCanvas();
-                for (let i = 0; i < numberOfPieces; i++) pieces.push(new Piece());
-                animate();
+            // Slow Rain
+            resizeCanvas();
+            for (let i = 0; i < 35; i++) pieces.push(new Piece());
+            isRaining = true;
+            animate();
 
-                document.getElementById('birthday-overlay').style.opacity = '0';
-                setTimeout(() => {
-                    document.getElementById('birthday-overlay').style.display = 'none';
-                    document.getElementById('content').style.opacity = '1';
-                    document.getElementById('main-body').style.overflowY = 'auto';
-                }, 800);
-            }
+            document.getElementById('birthday-overlay').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('birthday-overlay').style.display = 'none';
+                document.getElementById('content').style.opacity = '1';
+                document.getElementById('content').classList.add('animate-fade-in');
+            }, 800);
         });
- 
-        window.addEventListener('resize', initCanvas);
-    </script> 
+
+        // Anti-Crash Resize
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(resizeCanvas, 250);
+        });
+    </script>
 </body>
 </html>
